@@ -426,7 +426,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
       <header className="border-b p-4 flex justify-between items-center">
-        <h1 className="text-xl font-bold">Werewolves Host Assistant</h1>
+        <h1 className="text-xl font-bold">Werewolves</h1>
         <div className="flex items-center gap-2">
           {gameState.step > 1 && (
             <Button variant="outline" size="sm" onClick={resetGame}>
