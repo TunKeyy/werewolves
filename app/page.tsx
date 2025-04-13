@@ -2,22 +2,18 @@
 
 import { useState, useEffect } from "react"
 import { PlayerInput } from "@/components/player-input"
-import { RoleSelection } from "@/components/role-selection"
+import { getIconByName, RoleSelection } from "@/components/role-selection"
 import { RoleAssignment } from "@/components/role-assignment"
 import { GameDashboard } from "@/components/game-dashboard"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import {
   Moon,
-  Sun,
   Users,
   Eye,
   Heart,
   FlaskRoundIcon as Flask,
-  Shield,
-  Skull,
   Crown,
-  Sparkles,
   Bomb,
   Baby,
   CloudMoon,
@@ -79,37 +75,6 @@ export type GameState = {
   selectedRoles: Role[]
   currentPhase: Phase
   phaseHistory: PhaseHistory
-}
-
-// Helper function to get icon component from name
-// Export the getIconByName function so it can be imported in other files
-export function getIconByName(iconName: string): JSX.Element {
-  switch (iconName) {
-    case "Users":
-      return <Users className="h-5 w-5" />
-    case "Moon":
-      return <Moon className="h-5 w-5" />
-    case "Sun":
-      return <Sun className="h-5 w-5" />
-    case "Eye":
-      return <Eye className="h-5 w-5" />
-    case "Heart":
-      return <Heart className="h-5 w-5" />
-    case "Flask":
-      return <Flask className="h-5 w-5" />
-    case "Shield":
-      return <Shield className="h-5 w-5" />
-    case "Skull":
-      return <Skull className="h-5 w-5" />
-    case "Crown":
-      return <Crown className="h-5 w-5" />
-    case "Sparkles":
-      return <Sparkles className="h-5 w-5" />
-    case "Bomb":
-      return <Bomb className="h-5 w-5" />
-    default:
-      return <Users className="h-5 w-5" />
-  }
 }
 
 // Helper function to prepare state for localStorage

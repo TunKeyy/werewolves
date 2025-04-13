@@ -2,14 +2,14 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { JSX, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { AlertCircle, Info, Minus, Plus, PlusCircle } from "lucide-react"
-import { getIconByName, type GameState, type Role } from "@/app/page"
+import { AlertCircle, Bomb, Crown, Eye, FlaskRoundIcon as Flask, Heart, Info, Minus, Moon, Plus, PlusCircle, Shield, Skull, Sparkles, Sun, Users } from "lucide-react"
+import { type GameState, type Role } from "@/app/page"
 import { CustomRoleDialog } from "./custom-role-dialog"
 
 type RoleSelectionProps = {
@@ -294,4 +294,35 @@ function RoleCard({ role, onAdd, selectedCount }: RoleCardProps) {
       </Button>
     </div>
   )
+}
+
+// Helper function to get icon component from name
+// Export the getIconByName function so it can be imported in other files
+export function getIconByName(iconName: string): JSX.Element {
+  switch (iconName) {
+    case "Users":
+      return <Users className="h-5 w-5" />
+    case "Moon":
+      return <Moon className="h-5 w-5" />
+    case "Sun":
+      return <Sun className="h-5 w-5" />
+    case "Eye":
+      return <Eye className="h-5 w-5" />
+    case "Heart":
+      return <Heart className="h-5 w-5" />
+    case "Flask":
+      return <Flask className="h-5 w-5" />
+    case "Shield":
+      return <Shield className="h-5 w-5" />
+    case "Skull":
+      return <Skull className="h-5 w-5" />
+    case "Crown":
+      return <Crown className="h-5 w-5" />
+    case "Sparkles":
+      return <Sparkles className="h-5 w-5" />
+    case "Bomb":
+      return <Bomb className="h-5 w-5" />
+    default:
+      return <Users className="h-5 w-5" />
+  }
 }
