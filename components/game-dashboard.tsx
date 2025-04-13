@@ -8,9 +8,9 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Textarea } from "@/components/ui/textarea"
 import { ChevronDown, Moon, Sun } from "lucide-react"
 import type { GameState, Player } from "@/app/page"
-import { useTheme } from "next-themes"
 
 type GameDashboardProps = {
   gameState: GameState
@@ -19,8 +19,9 @@ type GameDashboardProps = {
 }
 
 export function GameDashboard({ gameState, setGameState, onBack }: GameDashboardProps) {
-  const { setTheme } = useTheme()
   const [activeTab, setActiveTab] = useState(`${gameState.currentPhase.type}-${gameState.currentPhase.number}`)
+  const [phaseTransition, setPhaseTransition] = useState(false)
+  const [phaseDirection, setPhaseDirection] = useState<"next" | "prev">("next")
 
   const { players, currentPhase } = gameState
 
@@ -47,14 +48,23 @@ export function GameDashboard({ gameState, setGameState, onBack }: GameDashboard
       }
     }
 
-    setGameState((prev) => ({
-      ...prev,
-      currentPhase: newPhase,
-    }))
+    // Set transition animation
+    setPhaseDirection("next")
+    setPhaseTransition(true)
 
-    setActiveTab(`${newPhase.type}-${newPhase.number}`)
+    // Update phase after animation
+    setTimeout(() => {
+      setGameState((prev) => ({
+        ...prev,
+        currentPhase: newPhase,
+      }))
+      setActiveTab(`${newPhase.type}-${newPhase.number}`)
 
-    setTheme(newPhase.type === "night" ? "dark" : "light")
+      // End transition
+      setTimeout(() => {
+        setPhaseTransition(false)
+      }, 300)
+    }, 300)
   }
 
   // Update player status
@@ -65,17 +75,17 @@ export function GameDashboard({ gameState, setGameState, onBack }: GameDashboard
     }))
   }
 
-  // Toggle player action
-  const togglePlayerAction = (playerId: string, action: string) => {
+  // Update player note
+  const updatePlayerNote = (playerId: string, phase: string, note: string) => {
     setGameState((prev) => ({
       ...prev,
       players: prev.players.map((p) =>
         p.id === playerId
           ? {
               ...p,
-              actions: {
-                ...p.actions,
-                [action]: !p.actions[action],
+              notes: {
+                ...p.notes,
+                [phase]: note,
               },
             }
           : p,
@@ -111,6 +121,13 @@ export function GameDashboard({ gameState, setGameState, onBack }: GameDashboard
 
   const phaseTabs = generatePhaseTabs()
 
+  // Sort players - alive first, then dead/bitten/bombed
+  const sortedPlayers = [...players].sort((a, b) => {
+    if (a.status === "alive" && b.status !== "alive") return -1
+    if (a.status !== "alive" && b.status === "alive") return 1
+    return 0
+  })
+
   return (
     <Card className="w-full">
       <CardHeader>
@@ -123,7 +140,7 @@ export function GameDashboard({ gameState, setGameState, onBack }: GameDashboard
         <CardDescription>Track player status and game progress</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="space-y-6">
+        <div className={`space-y-6 transition-opacity duration-300 ${phaseTransition ? "opacity-0" : "opacity-100"}`}>
           <div className="flex flex-wrap gap-4 justify-between">
             <div className="flex gap-2">
               <Badge variant="secondary" className="text-sm">
@@ -135,7 +152,7 @@ export function GameDashboard({ gameState, setGameState, onBack }: GameDashboard
             </div>
 
             {!isGameOver && (
-              <Button onClick={nextPhase}>
+              <Button onClick={nextPhase} className="transition-all duration-200 hover:scale-105">
                 Next: {currentPhase.type === "night" ? "Day" : "Night"}{" "}
                 {currentPhase.type === "night" ? currentPhase.number : currentPhase.number + 1}
               </Button>
@@ -166,12 +183,17 @@ export function GameDashboard({ gameState, setGameState, onBack }: GameDashboard
                           <th className="text-left py-2 px-3">Player</th>
                           <th className="text-left py-2 px-3">Role</th>
                           <th className="text-left py-2 px-3">Status</th>
-                          <th className="text-left py-2 px-3">Actions</th>
+                          <th className="text-left py-2 px-3">Notes</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {players.map((player) => (
-                          <tr key={player.id} className="border-b">
+                        {sortedPlayers.map((player) => (
+                          <tr
+                            key={player.id}
+                            className={`border-b transition-colors duration-200 ${
+                              player.status !== "alive" ? "bg-muted/30 text-muted-foreground" : ""
+                            }`}
+                          >
                             <td className="py-2 px-3">{player.name}</td>
                             <td className="py-2 px-3">
                               <div className="flex items-center gap-1">
@@ -200,41 +222,20 @@ export function GameDashboard({ gameState, setGameState, onBack }: GameDashboard
                                   <DropdownMenuItem onClick={() => updatePlayerStatus(player.id, "protected")}>
                                     <StatusBadge status="protected" />
                                   </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => updatePlayerStatus(player.id, "bombed")}>
+                                    <StatusBadge status="bombed" />
+                                  </DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>
                             </td>
                             <td className="py-2 px-3">
-                              <div className="flex flex-wrap gap-1">
-                                {player.role?.id === "seer" && tab.id.startsWith("night") && (
-                                  <Button
-                                    variant={player.actions[`checked-${tab.id}`] ? "default" : "outline"}
-                                    size="sm"
-                                    onClick={() => togglePlayerAction(player.id, `checked-${tab.id}`)}
-                                  >
-                                    Checked
-                                  </Button>
-                                )}
-
-                                {player.role?.id === "werewolf" && tab.id.startsWith("night") && (
-                                  <Button
-                                    variant={player.actions[`bit-${tab.id}`] ? "default" : "outline"}
-                                    size="sm"
-                                    onClick={() => togglePlayerAction(player.id, `bit-${tab.id}`)}
-                                  >
-                                    Bit
-                                  </Button>
-                                )}
-
-                                {tab.id.startsWith("day") && (
-                                  <Button
-                                    variant={player.actions[`voted-${tab.id}`] ? "default" : "outline"}
-                                    size="sm"
-                                    onClick={() => togglePlayerAction(player.id, `voted-${tab.id}`)}
-                                  >
-                                    Voted Out
-                                  </Button>
-                                )}
-                              </div>
+                              <Textarea
+                                placeholder="Add notes here..."
+                                className="min-h-[60px] text-sm"
+                                value={player.notes?.[tab.id] || ""}
+                                onChange={(e) => updatePlayerNote(player.id, tab.id, e.target.value)}
+                                disabled={player.status !== "alive"}
+                              />
                             </td>
                           </tr>
                         ))}
@@ -284,6 +285,12 @@ function StatusBadge({ status }: { status: Player["status"] }) {
       return (
         <Badge variant="outline" className="bg-blue-500/10 text-blue-500 border-blue-500/20">
           Protected
+        </Badge>
+      )
+    case "bombed":
+      return (
+        <Badge variant="outline" className="bg-purple-500/10 text-purple-500 border-purple-500/20">
+          Bombed
         </Badge>
       )
   }

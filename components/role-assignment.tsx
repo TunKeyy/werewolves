@@ -2,11 +2,11 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { AlertCircle, Check, ChevronDown } from "lucide-react"
+import { AlertCircle, Check, X } from "lucide-react"
 import type { GameState, Player, Role } from "@/app/page"
 import {
   DndContext,
@@ -16,10 +16,10 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
+  TouchSensor,
 } from "@dnd-kit/core"
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
 type RoleAssignmentProps = {
   gameState: GameState
@@ -31,7 +31,6 @@ type RoleAssignmentProps = {
 export function RoleAssignment({ gameState, setGameState, onNext, onBack }: RoleAssignmentProps) {
   const [error, setError] = useState<string | null>(null)
   const [activeRole, setActiveRole] = useState<Role | null>(null)
-  const [isMobile, setIsMobile] = useState(false)
 
   const { players, selectedRoles } = gameState
 
@@ -48,25 +47,17 @@ export function RoleAssignment({ gameState, setGameState, onNext, onBack }: Role
   // Check if all players have roles assigned
   const allPlayersAssigned = players.every((player) => player.role)
 
-  // Check if we're on mobile
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768)
-    }
-
-    checkMobile()
-    window.addEventListener("resize", checkMobile)
-
-    return () => {
-      window.removeEventListener("resize", checkMobile)
-    }
-  }, [])
-
-  // Set up DnD sensors
+  // Set up DnD sensors for both mouse/touch
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
         distance: 5,
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 250,
+        tolerance: 5,
       },
     }),
   )
@@ -94,16 +85,21 @@ export function RoleAssignment({ gameState, setGameState, onNext, onBack }: Role
       const player = players.find((p) => p.id === playerId)
 
       if (role && player) {
-        // Check if the player already has a role
+        // If player already has a role, return that role to the pool
         if (player.role) {
-          setError("This player already has a role assigned")
-          return
+          // Increment the count of the previous role in selectedRoles
+          setGameState((prev) => ({
+            ...prev,
+            selectedRoles: prev.selectedRoles.map((r) => (r.id === player.role?.id ? { ...r, count: r.count + 1 } : r)),
+          }))
         }
 
-        // Assign role to player
+        // Assign new role to player
         setGameState((prev) => ({
           ...prev,
-          players: prev.players.map((p) => (p.id === playerId ? { ...p, role: role } : p)),
+          players: prev.players.map((p) => (p.id === playerId ? { ...p, role } : p)),
+          // Decrement the count of the assigned role in selectedRoles
+          selectedRoles: prev.selectedRoles.map((r) => (r.id === role.id ? { ...r, count: r.count - 1 } : r)),
         }))
       }
     }
@@ -111,50 +107,21 @@ export function RoleAssignment({ gameState, setGameState, onNext, onBack }: Role
     setActiveRole(null)
   }
 
-  // Assign role to player (for mobile)
-  const assignRoleToPlayer = (playerId: string, role: Role) => {
-    // Check if the player already has a role
+  // Remove role from player
+  const removeRoleFromPlayer = (playerId: string) => {
     const player = players.find((p) => p.id === playerId)
 
     if (player?.role) {
-      setError("This player already has a role assigned")
-      return
+      setGameState((prev) => ({
+        ...prev,
+        // Remove role from player
+        players: prev.players.map((p) => (p.id === playerId ? { ...p, role: undefined } : p)),
+        // Increment the count of the returned role in selectedRoles
+        selectedRoles: prev.selectedRoles.map((r) => (r.id === player.role?.id ? { ...r, count: r.count + 1 } : r)),
+      }))
     }
 
-    // Check if this role is already assigned to the maximum number of players
-    const assignedCount = players.filter((p) => p.role?.id === role.id).length
-    const roleLimit = selectedRoles.find((r) => r.id === role.id)?.count || 0
-
-    if (assignedCount >= roleLimit) {
-      setError(`All ${role.name} roles have been assigned`)
-      return
-    }
-
-    // Assign role to player
-    setGameState((prev) => ({
-      ...prev,
-      players: prev.players.map((p) => (p.id === playerId ? { ...p, role: role } : p)),
-    }))
-
     setError(null)
-  }
-
-  // Remove role from player
-  const removeRoleFromPlayer = (playerId: string) => {
-    setGameState((prev) => ({
-      ...prev,
-      players: prev.players.map((p) => (p.id === playerId ? { ...p, role: undefined } : p)),
-    }))
-
-    setError(null)
-  }
-
-  // Get available roles (not yet assigned to maximum players)
-  const getAvailableRoles = () => {
-    return selectedRoles.filter((role) => {
-      const assignedCount = players.filter((p) => p.role?.id === role.id).length
-      return assignedCount < role.count
-    })
   }
 
   // Handle next step
@@ -197,9 +164,22 @@ export function RoleAssignment({ gameState, setGameState, onNext, onBack }: Role
       }
     })
 
+    // Update selected roles counts
+    const updatedSelectedRoles = [...selectedRoles]
+    shuffledRoles.forEach((role) => {
+      const roleIndex = updatedSelectedRoles.findIndex((r) => r.id === role.id)
+      if (roleIndex >= 0) {
+        updatedSelectedRoles[roleIndex] = {
+          ...updatedSelectedRoles[roleIndex],
+          count: updatedSelectedRoles[roleIndex].count - 1,
+        }
+      }
+    })
+
     setGameState((prev) => ({
       ...prev,
       players: updatedPlayers,
+      selectedRoles: updatedSelectedRoles,
     }))
 
     setError(null)
@@ -210,7 +190,8 @@ export function RoleAssignment({ gameState, setGameState, onNext, onBack }: Role
       <CardHeader>
         <CardTitle>Assign Roles</CardTitle>
         <CardDescription>
-          {isMobile ? "Tap on a player to assign a role" : "Drag roles and drop them onto players to assign them"}
+          Drag roles and drop them onto players to assign them. You can reassign roles by dragging a new role to a
+          player.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -239,9 +220,6 @@ export function RoleAssignment({ gameState, setGameState, onNext, onBack }: Role
                       <PlayerItem
                         key={player.id}
                         player={player}
-                        isMobile={isMobile}
-                        availableRoles={getAvailableRoles()}
-                        onAssignRole={(role) => assignRoleToPlayer(player.id, role)}
                         onRemoveRole={() => removeRoleFromPlayer(player.id)}
                       />
                     ))}
@@ -289,13 +267,10 @@ export function RoleAssignment({ gameState, setGameState, onNext, onBack }: Role
 
 type PlayerItemProps = {
   player: Player
-  isMobile: boolean
-  availableRoles: Role[]
-  onAssignRole: (role: Role) => void
   onRemoveRole: () => void
 }
 
-function PlayerItem({ player, isMobile, availableRoles, onAssignRole, onRemoveRole }: PlayerItemProps) {
+function PlayerItem({ player, onRemoveRole }: PlayerItemProps) {
   const { attributes, listeners, setNodeRef, isDragging } = useSortable({
     id: player.id,
     data: {
@@ -323,28 +298,11 @@ function PlayerItem({ player, isMobile, availableRoles, onAssignRole, onRemoveRo
         )}
       </div>
 
-      {isMobile &&
-        (player.role ? (
-          <Button variant="ghost" size="sm" onClick={onRemoveRole}>
-            Remove
-          </Button>
-        ) : (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
-                Assign Role <ChevronDown className="ml-1 h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {availableRoles.map((role) => (
-                <DropdownMenuItem key={role.id} onClick={() => onAssignRole(role)}>
-                  <span className="mr-2">{role.icon}</span>
-                  {role.name}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        ))}
+      {player.role && (
+        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={onRemoveRole}>
+          <X className="h-3 w-3" />
+        </Button>
+      )}
     </div>
   )
 }
@@ -376,7 +334,7 @@ function RoleItem({ role, isAssigned }: RoleItemProps) {
       {...listeners}
       className={`p-3 bg-card rounded-md border flex items-center justify-between ${
         isDragging ? "opacity-50" : ""
-      } ${isAssigned ? "opacity-50 bg-muted" : ""}`}
+      } ${isAssigned ? "opacity-50 bg-muted" : ""} transition-all duration-200`}
     >
       <div className="flex items-center gap-2">
         <span>{role.icon}</span>

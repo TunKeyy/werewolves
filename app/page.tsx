@@ -7,7 +7,30 @@ import { RoleAssignment } from "@/components/role-assignment"
 import { GameDashboard } from "@/components/game-dashboard"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
-import { Moon, Sun, Users, Eye, Heart, FlaskRoundIcon as Flask, Shield, Baby, Bomb, Crown, EyeOff, KeyRound, MoonStar, Music2, ShieldCheck, Smile, UserCheck, UserMinus, Sword, CloudMoon, SunMoon } from "lucide-react"
+import {
+  Moon,
+  Sun,
+  Users,
+  Eye,
+  Heart,
+  FlaskRoundIcon as Flask,
+  Shield,
+  Skull,
+  Crown,
+  Sparkles,
+  Bomb,
+  Baby,
+  CloudMoon,
+  EyeOff,
+  KeyRound,
+  MoonStar,
+  Music2,
+  ShieldCheck,
+  Smile,
+  SunMoon,
+  UserCheck,
+  UserMinus,
+} from "lucide-react"
 import { ThemeToggle } from "@/components/theme-toggle"
 import type { JSX } from "react/jsx-runtime"
 
@@ -16,8 +39,9 @@ export type Player = {
   id: string
   name: string
   role?: Role
-  status: "alive" | "dead" | "bitten" | "protected"
+  status: "alive" | "dead" | "bitten" | "protected" | "bombed"
   actions: Record<string, boolean>
+  notes: Record<string, string>
 }
 
 export type Role = {
@@ -43,6 +67,7 @@ export type GameState = {
 }
 
 // Helper function to get icon component from name
+// Export the getIconByName function so it can be imported in other files
 export function getIconByName(iconName: string): JSX.Element {
   switch (iconName) {
     case "Users":
@@ -59,6 +84,14 @@ export function getIconByName(iconName: string): JSX.Element {
       return <Flask className="h-5 w-5" />
     case "Shield":
       return <Shield className="h-5 w-5" />
+    case "Skull":
+      return <Skull className="h-5 w-5" />
+    case "Crown":
+      return <Crown className="h-5 w-5" />
+    case "Sparkles":
+      return <Sparkles className="h-5 w-5" />
+    case "Bomb":
+      return <Bomb className="h-5 w-5" />
     default:
       return <Users className="h-5 w-5" />
   }
@@ -106,9 +139,14 @@ function rehydrateState(state: any): GameState {
             ...player.role,
             icon: getIconByName(player.role.iconName),
           },
+          // Ensure notes field exists
+          notes: player.notes || {},
         }
       }
-      return player
+      return {
+        ...player,
+        notes: player.notes || {},
+      }
     }),
   }
 }
@@ -162,8 +200,8 @@ export default function Home() {
         id: "hunter",
         name: "Hunter",
         description: "Can take someone with them when they die.",
-        iconName: "Sword",
-        icon: <Sword className="h-5 w-5" />,
+        iconName: "Shield",
+        icon: <Shield className="h-5 w-5" />,
         team: "village",
         limit: 1,
         count: 0,
@@ -177,8 +215,7 @@ export default function Home() {
         team: "village",
         limit: 1,
         count: 0,
-      },
-      {
+      },{
         id: "protector",
         name: "Protector",
         description: "Protects one person each night from being bitten.",
