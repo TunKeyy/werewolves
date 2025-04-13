@@ -30,6 +30,7 @@ import {
   SunMoon,
   UserCheck,
   UserMinus,
+  Sword,
 } from "lucide-react"
 import { ThemeToggle } from "@/components/theme-toggle"
 import type { JSX } from "react/jsx-runtime"
@@ -55,15 +56,29 @@ export type Role = {
   count: number
 }
 
+export type PhaseType = "day" | "night"
+
+export type Phase = {
+  type: PhaseType
+  number: number
+}
+
+export type PhaseData = {
+  players: Player[]
+  whatHappened?: string
+}
+
+export type PhaseHistory = {
+  [key: string]: PhaseData // key format: "day-1", "night-1", etc.
+}
+
 export type GameState = {
   step: number
   players: Player[]
   availableRoles: Role[]
   selectedRoles: Role[]
-  currentPhase: {
-    type: "day" | "night"
-    number: number
-  }
+  currentPhase: Phase
+  phaseHistory: PhaseHistory
 }
 
 // Helper function to get icon component from name
@@ -116,6 +131,19 @@ function prepareStateForStorage(state: GameState): any {
       }
       return player
     }),
+    phaseHistory: Object.entries(state.phaseHistory).reduce((acc, [phase, phaseData]) => {
+      acc[phase] = {
+        ...phaseData,
+        players: phaseData.players.map((player) => {
+          if (player.role) {
+            const { icon, ...restRole } = player.role
+            return { ...player, role: restRole }
+          }
+          return player
+        }),
+      }
+      return acc
+    }, {} as PhaseHistory),
   }
 }
 
@@ -148,7 +176,34 @@ function rehydrateState(state: any): GameState {
         notes: player.notes || {},
       }
     }),
+    phaseHistory: Object.entries(state.phaseHistory || {}).reduce((acc, [phase, phaseData]) => {
+      acc[phase] = {
+        ...phaseData,
+        players: (phaseData as PhaseData).players.map((player) => {
+          if (player.role) {
+            return {
+              ...player,
+              role: {
+                ...player.role,
+                icon: getIconByName(player.role.iconName),
+              },
+              notes: player.notes || {},
+            }
+          }
+          return {
+            ...player,
+            notes: player.notes || {},
+          }
+        }),
+      }
+      return acc
+    }, {} as PhaseHistory),
   }
+}
+
+// Helper function to get phase key
+export function getPhaseKey(phase: Phase): string {
+  return `${phase.type}-${phase.number}`
 }
 
 export default function Home() {
@@ -200,8 +255,8 @@ export default function Home() {
         id: "hunter",
         name: "Hunter",
         description: "Can take someone with them when they die.",
-        iconName: "Shield",
-        icon: <Shield className="h-5 w-5" />,
+        iconName: "Sword",
+        icon: <Sword className="h-5 w-5" />,
         team: "village",
         limit: 1,
         count: 0,
@@ -215,7 +270,8 @@ export default function Home() {
         team: "village",
         limit: 1,
         count: 0,
-      },{
+      },
+      {
         id: "protector",
         name: "Protector",
         description: "Protects one person each night from being bitten.",
@@ -258,7 +314,7 @@ export default function Home() {
       {
         id: "bomber",
         name: "Bomber",
-        description: "Kills players sitting next to them when they die.",
+        description: "Can bomb one player during the game.",
         iconName: "Bomb",
         icon: <Bomb className="h-5 w-5" />,
         team: "special",
@@ -351,6 +407,7 @@ export default function Home() {
       type: "night",
       number: 1,
     },
+    phaseHistory: {},
   })
 
   // Load state from localStorage on initial render
@@ -395,6 +452,7 @@ export default function Home() {
           type: "night",
           number: 1,
         },
+        phaseHistory: {},
       })
     }
   }

@@ -11,6 +11,7 @@ import type { GameState, Player, Role } from "@/app/page"
 import {
   DndContext,
   type DragEndEvent,
+  type DragStartEvent,
   DragOverlay,
   type DragStartEvent,
   PointerSensor,
@@ -20,6 +21,7 @@ import {
 } from "@dnd-kit/core"
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
 type RoleAssignmentProps = {
   gameState: GameState
@@ -185,6 +187,39 @@ export function RoleAssignment({ gameState, setGameState, onNext, onBack }: Role
     setError(null)
   }
 
+  const assignRoleToPlayer = (playerId: string, roleId: string) => {
+    const player = players.find((p) => p.id === playerId)
+    const role = selectedRoles.find((r) => r.id === roleId)
+
+    if (!player || !role || role.count <= 0) return
+
+    // If player already has a role, return that role to the pool
+    if (player.role) {
+      // Increment the count of the previous role in selectedRoles
+      setGameState((prev) => ({
+        ...prev,
+        selectedRoles: prev.selectedRoles.map((r) => (r.id === player.role?.id ? { ...r, count: r.count + 1 } : r)),
+      }))
+    }
+
+    // Find an available instance of this role
+    const availableRoleInstance = expandedRoles.find(
+      (r) => r.id === roleId && !players.some((p) => p.role?.uniqueId === r.uniqueId),
+    )
+
+    if (!availableRoleInstance) return
+
+    // Assign new role to player
+    setGameState((prev) => ({
+      ...prev,
+      players: prev.players.map((p) => (p.id === playerId ? { ...p, role: availableRoleInstance } : p)),
+      // Decrement the count of the assigned role in selectedRoles
+      selectedRoles: prev.selectedRoles.map((r) => (r.id === roleId ? { ...r, count: r.count - 1 } : r)),
+    }))
+
+    setError(null)
+  }
+
   return (
     <Card className="w-full">
       <CardHeader>
@@ -221,6 +256,8 @@ export function RoleAssignment({ gameState, setGameState, onNext, onBack }: Role
                         key={player.id}
                         player={player}
                         onRemoveRole={() => removeRoleFromPlayer(player.id)}
+                        availableRoles={selectedRoles.filter((role) => role.count > 0)}
+                        onAssignRole={(roleId) => assignRoleToPlayer(player.id, roleId)}
                       />
                     ))}
                   </div>
@@ -268,9 +305,11 @@ export function RoleAssignment({ gameState, setGameState, onNext, onBack }: Role
 type PlayerItemProps = {
   player: Player
   onRemoveRole: () => void
+  availableRoles: Role[]
+  onAssignRole: (roleId: string) => void
 }
 
-function PlayerItem({ player, onRemoveRole }: PlayerItemProps) {
+function PlayerItem({ player, onRemoveRole, availableRoles, onAssignRole }: PlayerItemProps) {
   const { attributes, listeners, setNodeRef, isDragging } = useSortable({
     id: player.id,
     data: {
@@ -298,11 +337,29 @@ function PlayerItem({ player, onRemoveRole }: PlayerItemProps) {
         )}
       </div>
 
-      {player.role && (
-        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={onRemoveRole}>
-          <X className="h-3 w-3" />
-        </Button>
-      )}
+      <div className="flex items-center gap-1">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm" className="h-7 px-2 text-xs">
+              Assign
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            {availableRoles.map((role) => (
+              <DropdownMenuItem key={role.id} onClick={() => onAssignRole(role.id)}>
+                <span className="mr-2">{role.icon}</span>
+                {role.name}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        {player.role && (
+          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={onRemoveRole}>
+            <X className="h-3 w-3" />
+          </Button>
+        )}
+      </div>
     </div>
   )
 }
