@@ -113,19 +113,22 @@ export function getIconByName(iconName: string): JSX.Element {
 }
 
 // Helper function to prepare state for localStorage
-function prepareStateForStorage(state: GameState): any {
+function prepareStateForStorage(state: GameState) {
   return {
     ...state,
     availableRoles: state.availableRoles.map((role) => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { icon, ...restRole } = role
       return restRole
     }),
     selectedRoles: state.selectedRoles.map((role) => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { icon, ...restRole } = role
       return restRole
     }),
     players: state.players.map((player) => {
       if (player.role) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { icon, ...restRole } = player.role
         return { ...player, role: restRole }
       }
@@ -136,6 +139,7 @@ function prepareStateForStorage(state: GameState): any {
         ...phaseData,
         players: phaseData.players.map((player) => {
           if (player.role) {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const { icon, ...restRole } = player.role
             return { ...player, role: restRole }
           }
@@ -148,6 +152,7 @@ function prepareStateForStorage(state: GameState): any {
 }
 
 // Helper function to rehydrate state from localStorage
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function rehydrateState(state: any): GameState {
   return {
     ...state,
@@ -178,7 +183,7 @@ function rehydrateState(state: any): GameState {
     }),
     phaseHistory: Object.entries(state.phaseHistory || {}).reduce((acc, [phase, phaseData]) => {
       acc[phase] = {
-        ...phaseData,
+        ...phaseData as PhaseData,
         players: (phaseData as PhaseData).players.map((player) => {
           if (player.role) {
             return {
@@ -460,7 +465,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
       <header className="border-b p-4 flex justify-between items-center">
-        <h1 className="text-xl font-bold">Werewolves</h1>
+        <h1 className="text-xl font-bold">Werewolves Host Assistant</h1>
         <div className="flex items-center gap-2">
           {gameState.step > 1 && (
             <Button variant="outline" size="sm" onClick={resetGame}>
