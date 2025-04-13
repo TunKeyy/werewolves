@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { ChevronDown, Moon, Sun } from "lucide-react"
 import type { GameState, Player } from "@/app/page"
+import { useTheme } from "next-themes"
 
 type GameDashboardProps = {
   gameState: GameState
@@ -18,6 +19,7 @@ type GameDashboardProps = {
 }
 
 export function GameDashboard({ gameState, setGameState, onBack }: GameDashboardProps) {
+  const { setTheme } = useTheme()
   const [activeTab, setActiveTab] = useState(`${gameState.currentPhase.type}-${gameState.currentPhase.number}`)
 
   const { players, currentPhase } = gameState
@@ -51,6 +53,8 @@ export function GameDashboard({ gameState, setGameState, onBack }: GameDashboard
     }))
 
     setActiveTab(`${newPhase.type}-${newPhase.number}`)
+
+    setTheme(newPhase.type === "night" ? "dark" : "light")
   }
 
   // Update player status

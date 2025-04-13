@@ -8,8 +8,9 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from "@/components/ui/badge"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { AlertCircle, Info, Minus, Plus } from "lucide-react"
-import type { GameState, Role } from "@/app/page"
+import { AlertCircle, Info, Minus, Plus, PlusCircle } from "lucide-react"
+import { getIconByName, type GameState, type Role } from "@/app/page"
+import { CustomRoleDialog } from "./custom-role-dialog"
 
 type RoleSelectionProps = {
   gameState: GameState
@@ -20,6 +21,7 @@ type RoleSelectionProps = {
 
 export function RoleSelection({ gameState, setGameState, onNext, onBack }: RoleSelectionProps) {
   const [error, setError] = useState<string | null>(null)
+  const [customRoleDialogOpen, setCustomRoleDialogOpen] = useState(false)
 
   const { players, availableRoles, selectedRoles } = gameState
   const playerCount = players.length
@@ -90,6 +92,20 @@ export function RoleSelection({ gameState, setGameState, onNext, onBack }: RoleS
     setError(null)
   }
 
+  const handleAddCustomRole = (newRole: Omit<Role, "icon">) => {
+    const roleWithIcon: Role = {
+      ...newRole,
+      icon: getIconByName(newRole.iconName),
+    }
+
+    setGameState((prev) => ({
+      ...prev,
+      availableRoles: [...prev.availableRoles, roleWithIcon],
+    }))
+
+    addRole(roleWithIcon)
+  }
+  
   const handleNext = () => {
     if (selectedRoleCount < playerCount) {
       setError(`You need to select ${playerCount} roles in total`)
@@ -108,6 +124,7 @@ export function RoleSelection({ gameState, setGameState, onNext, onBack }: RoleS
   const villageRoles = availableRoles.filter((role) => role.team === "village")
   const werewolfRoles = availableRoles.filter((role) => role.team === "werewolf")
   const specialRoles = availableRoles.filter((role) => role.team === "special")
+  const customRoles = availableRoles.filter((role) => role.id.startsWith("custom-"))
 
   return (
     <TooltipProvider>
@@ -194,6 +211,33 @@ export function RoleSelection({ gameState, setGameState, onNext, onBack }: RoleS
                   </div>
                 </div>
               )}
+
+              {customRoles.length > 0 && (
+                <div>
+                  <h3 className="font-medium mb-2">Custom Roles</h3>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                    {customRoles.map((role) => (
+                      <RoleCard
+                        key={role.id}
+                        role={role}
+                        onAdd={() => addRole(role)}
+                        selectedCount={selectedRoles.find((r) => r.id === role.id)?.count || 0}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="flex justify-start mb-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCustomRoleDialogOpen(true)}
+                className="flex items-center gap-1"
+              >
+                <PlusCircle className="h-4 w-4" />
+                Add Custom Role
+              </Button>
             </div>
           </div>
         </CardContent>
@@ -204,6 +248,11 @@ export function RoleSelection({ gameState, setGameState, onNext, onBack }: RoleS
           <Button onClick={handleNext}>Next: Assign Roles</Button>
         </CardFooter>
       </Card>
+      <CustomRoleDialog
+        open={customRoleDialogOpen}
+        onOpenChange={setCustomRoleDialogOpen}
+        onAddRole={handleAddCustomRole}
+      />
     </TooltipProvider>
   )
 }

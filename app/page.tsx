@@ -7,7 +7,7 @@ import { RoleAssignment } from "@/components/role-assignment"
 import { GameDashboard } from "@/components/game-dashboard"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
-import { Moon, Sun, Users, Eye, Heart, FlaskRoundIcon as Flask, Shield } from "lucide-react"
+import { Moon, Sun, Users, Eye, Heart, FlaskRoundIcon as Flask, Shield, Baby, Bomb, Crown, EyeOff, KeyRound, MoonStar, Music2, ShieldCheck, Smile, UserCheck, UserMinus, Sword, CloudMoon, SunMoon } from "lucide-react"
 import { ThemeToggle } from "@/components/theme-toggle"
 import type { JSX } from "react/jsx-runtime"
 
@@ -43,7 +43,7 @@ export type GameState = {
 }
 
 // Helper function to get icon component from name
-function getIconByName(iconName: string): JSX.Element {
+export function getIconByName(iconName: string): JSX.Element {
   switch (iconName) {
     case "Users":
       return <Users className="h-5 w-5" />
@@ -162,8 +162,8 @@ export default function Home() {
         id: "hunter",
         name: "Hunter",
         description: "Can take someone with them when they die.",
-        iconName: "Shield",
-        icon: <Shield className="h-5 w-5" />,
+        iconName: "Sword",
+        icon: <Sword className="h-5 w-5" />,
         team: "village",
         limit: 1,
         count: 0,
@@ -178,6 +178,136 @@ export default function Home() {
         limit: 1,
         count: 0,
       },
+      {
+        id: "protector",
+        name: "Protector",
+        description: "Protects one person each night from being bitten.",
+        iconName: "ShieldCheck",
+        icon: <ShieldCheck className="h-5 w-5" />,
+        team: "village",
+        limit: 1,
+        count: 0,
+      },
+      {
+        id: "white-wolf",
+        name: "White Wolf",
+        description: "Kills villagers at night and werewolves every other night.",
+        iconName: "MoonStar",
+        icon: <MoonStar className="h-5 w-5" />,
+        team: "werewolf",
+        limit: 1,
+        count: 0,
+      },
+      {
+        id: "half-wolf",
+        name: "Half Wolf",
+        description: "Appears as a villager to the Seer, but may turn into a werewolf.",
+        iconName: "ClouldMoon",
+        icon: <CloudMoon className="h-5 w-5" />,
+        team: "werewolf",
+        limit: 1,
+        count: 0,
+      },
+      {
+        id: "thief",
+        name: "Thief",
+        description: "Chooses one of two extra roles at game start.",
+        iconName: "KeyRound",
+        icon: <KeyRound className="h-5 w-5" />,
+        team: "special",
+        limit: 1,
+        count: 0,
+      },
+      {
+        id: "bomber",
+        name: "Bomber",
+        description: "Kills players sitting next to them when they die.",
+        iconName: "Bomb",
+        icon: <Bomb className="h-5 w-5" />,
+        team: "special",
+        limit: 1,
+        count: 0,
+      },
+      {
+        id: "moon-lady",
+        name: "Moon Lady",
+        description: "A mysterious character with unique powers (custom rules).",
+        iconName: "SunMoon",
+        icon: <SunMoon className="h-5 w-5" />,
+        team: "village",
+        limit: 1,
+        count: 0,
+      },
+      {
+        id: "prince",
+        name: "Prince",
+        description: "Immune to elimination by voting.",
+        iconName: "Crown",
+        icon: <Crown className="h-5 w-5" />,
+        team: "village",
+        limit: 1,
+        count: 0,
+      },
+      {
+        id: "elder",
+        name: "Elder",
+        description: "Survives the first attack.",
+        iconName: "UserCheck",
+        icon: <UserCheck className="h-5 w-5" />,
+        team: "village",
+        limit: 1,
+        count: 0,
+      },
+      {
+        id: "idiot",
+        name: "Idiot",
+        description: "If voted out, reveals role but remains in the game.",
+        iconName: "Smile",
+        icon: <Smile className="h-5 w-5" />,
+        team: "village",
+        limit: 1,
+        count: 0,
+      },
+      {
+        id: "little-girl",
+        name: "Little Girl",
+        description: "Can peek during the wolves' turn but risks death if seen.",
+        iconName: "EyeOff",
+        icon: <EyeOff className="h-5 w-5" />,
+        team: "village",
+        limit: 1,
+        count: 0,
+      },
+      {
+        id: "scapegoat",
+        name: "Scapegoat",
+        description: "Gets eliminated during vote ties and picks next voters.",
+        iconName: "UserMinus",
+        icon: <UserMinus className="h-5 w-5" />,
+        team: "village",
+        limit: 1,
+        count: 0,
+      },
+      {
+        id: "pied-piper",
+        name: "Pied Piper",
+        description: "Charms players each night. Wins if all others are charmed or dead.",
+        iconName: "Music2",
+        icon: <Music2 className="h-5 w-5" />,
+        team: "special",
+        limit: 1,
+        count: 0,
+      },
+      {
+        id: "wild-child",
+        name: "Wild Child",
+        description: "Picks a role model. If they die, becomes a werewolf.",
+        iconName: "Baby",
+        icon: <Baby className="h-5 w-5" />,
+        team: "village",
+        limit: 1,
+        count: 0,
+      }
     ],
     selectedRoles: [],
     currentPhase: {
