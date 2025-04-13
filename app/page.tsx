@@ -50,6 +50,7 @@ export type Role = {
   team: "village" | "werewolf" | "special"
   limit: number
   count: number
+  uniqueId?: string
 }
 
 export type PhaseType = "day" | "night"

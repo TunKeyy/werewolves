@@ -43,7 +43,7 @@ export function PlayerInput({ players, setGameState, onNext }: PlayerInputProps)
           name: newPlayerName.trim(),
           status: "alive",
           actions: {},
-        },
+        } as Player,
       ],
     }))
     setNewPlayerName("")
@@ -85,7 +85,7 @@ export function PlayerInput({ players, setGameState, onNext }: PlayerInputProps)
 
     setGameState((prev) => ({
       ...prev,
-      players: [...prev.players, ...newPlayers],
+      players: [...prev.players, ...newPlayers as Player[]],
     }))
     setBulkText("")
     setError(null)

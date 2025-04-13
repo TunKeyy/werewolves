@@ -13,7 +13,6 @@ import {
   type DragEndEvent,
   type DragStartEvent,
   DragOverlay,
-  type DragStartEvent,
   PointerSensor,
   useSensor,
   useSensors,
