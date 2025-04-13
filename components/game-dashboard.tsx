@@ -11,7 +11,6 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Textarea } from "@/components/ui/textarea"
 import { ChevronDown, Clock, HelpCircle, Moon, PencilLine, Sun } from "lucide-react"
 import type { GameState, Phase, Player } from "@/app/page"
-import { getPhaseKey } from "@/app/page"
 import { WhatHappenedDialog } from "@/components/what-happened-dialog"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { useTheme } from "next-themes"
@@ -20,6 +19,10 @@ type GameDashboardProps = {
   gameState: GameState
   setGameState: React.Dispatch<React.SetStateAction<GameState>>
   onBack: () => void
+}
+
+export function getPhaseKey(phase: Phase): string {
+  return `${phase.type}-${phase.number}`
 }
 
 export function GameDashboard({ gameState, setGameState, onBack }: GameDashboardProps) {

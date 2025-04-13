@@ -171,11 +171,6 @@ function rehydrateState(state: any): GameState {
   }
 }
 
-// Helper function to get phase key
-export function getPhaseKey(phase: Phase): string {
-  return `${phase.type}-${phase.number}`
-}
-
 export default function Home() {
   const [gameState, setGameState] = useState<GameState>({
     step: 1,
