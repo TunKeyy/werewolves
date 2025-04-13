@@ -26,7 +26,6 @@ export function GameDashboard({ gameState, setGameState, onBack }: GameDashboard
   const { setTheme } = useTheme()
   const [activeTab, setActiveTab] = useState(`${gameState.currentPhase.type}-${gameState.currentPhase.number}`)
   const [phaseTransition, setPhaseTransition] = useState(false)
-  const [phaseDirection, setPhaseDirection] = useState<"next" | "prev">("next")
   const [viewingHistory, setViewingHistory] = useState(false)
   const [displayedPlayers, setDisplayedPlayers] = useState<Player[]>(gameState.players)
   const [whatHappenedDialogOpen, setWhatHappenedDialogOpen] = useState(false)
@@ -72,7 +71,6 @@ export function GameDashboard({ gameState, setGameState, onBack }: GameDashboard
     }
 
     // Set transition animation
-    setPhaseDirection("next")
     setPhaseTransition(true)
 
     // Save current state to history
