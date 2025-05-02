@@ -55,7 +55,7 @@ export function GameDashboard({ gameState, setGameState, onBack }: GameDashboard
   const werewolvesCount = players.filter((p) => p.role?.team === "werewolf" && p.status === "alive").length
 
   // Check if game is over
-  const isGameOver = werewolvesCount >= villagersCount || werewolvesCount === 0
+  const isGameOver = 0
 
   // Move to next phase
   const nextPhase = () => {
